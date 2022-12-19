@@ -4,13 +4,18 @@ const handleRights = async (ctx, next) => {
   try {
     const { type } = ctx.query
     if (!['tree', 'list'].includes(type)) return
-    const result = await list()
+    let result = await list()
     if (type === 'list') {
       ctx.result = result
     } else {
+      result = result.map((item) => ({
+        key: item.id,
+        title: item.name,
+        pid: item.pid,
+      }))
       const res = []
       const map = result.reduce((pre, item) => {
-        pre[item.id] = item
+        pre[item.key] = item
         return pre
       }, {})
 

@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer')
 
 const errorTypes = require('../constants/error-types')
 const redis = require('../utils/redis')
-const { getUserByEmail, getCareFansList, userList } = require('../service/user.service')
+const { getUserByEmail, getCareFansList, userList, userTotal } = require('../service/user.service')
 const { md5handle, verifyEmail, randomFns, isMyNaN } = require('../utils/common')
 const { MY_EMAIL, MY_EMAIL_PASS } = require('../app/config.js')
 const { getUserInfo } = require('../service/user.service')
@@ -11,19 +11,14 @@ const { getUserInfo } = require('../service/user.service')
 const verifyPass = async (ctx, next) => {
   // 抽取数据
   const { password } = ctx.request.body
-
   // 判断邮箱密码是否为空
-  if (!password) {
-    const err = new Error(errorTypes.EMAIL_OR_PASSWORD_IS_REQUIRED)
-    return ctx.app.emit('error', err, ctx)
-  }
+  if (!password) return
   await next()
 }
 
 // 加密密码
 const handlePassword = async (ctx, next) => {
   const { password } = ctx.request.body
-  console.log(md5handle(password))
   ctx.request.body.password = md5handle(password)
   await next()
 }
@@ -31,13 +26,10 @@ const handlePassword = async (ctx, next) => {
 const verifyUEmail = async (ctx, next) => {
   const { email } = ctx.request.body
 
-  if (!email) {
-    const err = new Error(errorTypes.EMAIL_OR_PASSWORD_IS_REQUIRED)
-    return ctx.app.emit('error', err, ctx)
-  }
+  if (!email) return
   // 验证邮箱有效性
   if (!verifyEmail(email)) {
-    const err = new Error(errorTypes.EMAIL_IS_INCORRECT)
+    const err = new Error(errorTypes.FORMAT_ERROR)
     return ctx.app.emit('error', err, ctx)
   }
 
@@ -133,6 +125,8 @@ const getInfo = async (ctx, next) => {
   }
   try {
     const result = await userList(pagenum, pagesize)
+    const total = await userTotal()
+    ctx.total = total
     ctx.result = result
     await next()
   } catch (e) {

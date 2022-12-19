@@ -8,9 +8,25 @@ class Roles {
   }
 
   async create(name, desc) {
-    const statement = 'insert into roles (`name`, `desc`) values(?, ?)'
-    const [result] = await connection.execute(statement, [name, desc])
-    return result
+    const conn = await connection.getConnection()
+    await conn.beginTransaction()
+    let statement, res
+    try {
+      statement = 'insert into roles (`name`, `desc`) values(?, ?)'
+      res = await connection.execute(statement, [name, desc])
+    } catch (e) {
+      console.log(e)
+      await conn.rollback()
+    }
+    try {
+      statement = 'insert into role_rights (`role_id`) values(?)'
+      await connection.execute(statement, [res[0].insertId])
+      await conn.commit()
+    } catch (e) {
+      console.log(e)
+      await conn.rollback()
+    }
+    return res[0]
   }
 
   async deleteRole(roleId) {
@@ -20,9 +36,15 @@ class Roles {
   }
 
   async edit(roleId, { name, desc }) {
-    const statement = 'update roles set `name` = ?, `desc` = ? where id = ?'
-    const [result] = await connection.execute(statement, [name, desc, roleId])
-    return result
+    let statement, result
+    if (isNaN(parseInt(roleId)) || [1, 2, 3].includes(parseInt(roleId))) {
+      statement = 'update roles set `desc` = ? where id = ?'
+      result = await connection.execute(statement, [desc, roleId])
+    } else {
+      statement = 'update roles set `name` = ?, `desc` = ? where id = ?'
+      result = await connection.execute(statement, [name, desc, roleId])
+    }
+    return result[0]
   }
 
   async search(role, pagenum, pagesize) {
@@ -35,32 +57,37 @@ class Roles {
     return result
   }
 
+  async searchRoleTotal(role) {
+    const statement = `select count(*) count from roles where name like ?`
+    const [result] = await connection.execute(statement, [`%${role}%`])
+    return result
+  }
+
   async getRightsByRole(roleId) {
     const statement = `
       select 
-        rights.* 
+        rights_list list
       from 
-        role_rights rr
-      join 
-        rights 
-      on 
-        rights.id = rr.rights_id 
+        role_rights
       where 
-        rr.role_id = ?
+        role_id = ?
     `
     const [result] = await connection.execute(statement, [roleId])
-    return result
+    return result[0].list
   }
 
   async setRights(roleId, rightsList) {
     const statement = `
-      insert into role_rights (role_id, rights_id) values (?, ?)
+      update role_rights set rights_list = ? where role_id = ?
     `
-    const promiseArr = rightsList.map(async (item) => {
-      return await connection.execute(statement, [roleId, item])
-    })
-    const result = await Promise.allSettled(promiseArr)
-    return result.map((item) => item.status)
+    const [result] = await connection.execute(statement, [rightsList, roleId])
+    return result
+  }
+
+  async roleTotal() {
+    const statement = `select count(*) count from roles`
+    const [result] = await connection.execute(statement)
+    return result[0].count
   }
 }
 

@@ -9,9 +9,7 @@ const getMomentByPlateId = async (ctx, next) => {
     const err = new Error(FORMAT_ERROR)
     return ctx.app.emit('error', err, ctx)
   }
-
   const { plateId } = ctx.params
-  console.log(plateId)
   try {
     const result = await getMomentListByPlate(plateId, pagenum, pagesize)
     ctx.result = result

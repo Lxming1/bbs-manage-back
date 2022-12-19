@@ -1,6 +1,6 @@
 const Router = require('koa-router')
 const { list, del, search, create, role, edit, getRole } = require('../controller/user.controller')
-const { getInfo, handlePassword } = require('../middleware/user.middleware')
+const { getInfo, handlePassword, verifyPass } = require('../middleware/user.middleware')
 const { verifyAuth } = require('../middleware/auth.middleware')
 
 const userRouter = new Router({ prefix: '/users' })
@@ -10,9 +10,9 @@ userRouter.get('/', verifyAuth, getInfo, list)
 // 删除用户
 userRouter.delete('/:userId', verifyAuth, del)
 // 搜索用户
-userRouter.get('/search/:type', verifyAuth, search)
+userRouter.post('/search', verifyAuth, search)
 // 添加用户
-userRouter.post('/', verifyAuth, handlePassword, create)
+userRouter.post('/', verifyAuth, verifyPass, handlePassword, create)
 // 分配角色
 userRouter.put('/:userId/role/:roleId', verifyAuth, role)
 // 编辑用户信息

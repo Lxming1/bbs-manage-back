@@ -1,8 +1,7 @@
 const MISSING_PARAMETER = '缺少参数'
 const EMAIL_ALREADY_EXIST = '邮箱已被注册'
-const EMAIL_DOSE_NOT_EXIST = '邮箱不存在'
 const FORMAT_ERROR = '格式错误'
-const PASSORD_ERROR = '密码错误'
+const EMAIL_PASSWORD_ERROR = '用户名或密码错误'
 const UNAUTHORIZATION = '请先登录'
 const UNPERMISSION = '没有操作权限'
 const EMAIL_ERROR = '邮箱发送失败'
@@ -15,8 +14,7 @@ module.exports = {
   FORMAT_ERROR,
   MISSING_PARAMETER,
   EMAIL_ALREADY_EXIST,
-  EMAIL_DOSE_NOT_EXIST,
-  PASSORD_ERROR,
+  EMAIL_PASSWORD_ERROR,
   UNAUTHORIZATION,
   UNPERMISSION,
   EMAIL_ERROR,

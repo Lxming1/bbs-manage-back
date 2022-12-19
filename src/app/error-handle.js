@@ -1,7 +1,6 @@
 const {
   EMAIL_ALREADY_EXIST,
-  EMAIL_DOSE_NOT_EXIST,
-  PASSORD_ERROR,
+  EMAIL_PASSWORD_ERROR,
   UNAUTHORIZATION,
   UNPERMISSION,
   EXIST_CODE,
@@ -24,7 +23,7 @@ const errorHandle = (err, ctx) => {
       status = 409
       code = 2
       break
-    case PASSORD_ERROR:
+    case EMAIL_PASSWORD_ERROR:
     case EMAIL_ERROR:
     case CODE_IS_INCORRECT:
     case UNAUTHORIZATION:
@@ -33,7 +32,6 @@ const errorHandle = (err, ctx) => {
       break
     case FORMAT_ERROR:
     case MISSING_PARAMETER:
-    case EMAIL_DOSE_NOT_EXIST:
       status = 400
       code = 2
       break

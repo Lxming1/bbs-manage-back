@@ -7,6 +7,8 @@ const {
   search,
   getRightsByRole,
   setRights,
+  roleTotal,
+  searchRoleTotal,
 } = require('../service/roles.service')
 const { successBody, isMyNaN } = require('../utils/common')
 
@@ -20,7 +22,14 @@ class Roles {
     }
     try {
       const result = await roleList(pagenum, pagesize)
-      ctx.body = successBody(result, '获取角色列表成功')
+      const total = await roleTotal()
+      ctx.body = successBody(
+        {
+          roles: result,
+          total,
+        },
+        '获取角色列表成功'
+      )
     } catch (e) {
       console.log(e)
     }
@@ -41,7 +50,7 @@ class Roles {
 
   async del(ctx) {
     const { roleId } = ctx.params
-    if (isNaN(roleId) || [1, 2, 3].includes(parseInt(roleId))) return
+    if (isNaN(parseInt(roleId)) || [1, 2, 3].includes(parseInt(roleId))) return
     try {
       const result = await deleteRole(roleId)
       ctx.body = successBody(result, '删除成功')
@@ -52,8 +61,10 @@ class Roles {
 
   async editRole(ctx) {
     const { roleId } = ctx.params
+    const { name, desc } = ctx.request.body
+    if ([roleId, desc, name].includes(undefined)) return
     try {
-      const result = await edit(roleId, ctx.request.body)
+      const result = await edit(roleId)
       ctx.body = successBody(result, '编辑成功')
     } catch (e) {
       console.log(e)
@@ -61,15 +72,21 @@ class Roles {
   }
 
   async search(ctx) {
-    const { role, pagenum, pagesize } = ctx.query
-    if (isMyNaN(pagenum, pagesize) || !role) return
+    const { pagenum, pagesize } = ctx.query
+    if (isMyNaN(pagenum, pagesize)) return
     if (parseInt(pagenum) < 0 || parseInt(pagesize) < 0) {
       const err = new Error(FORMAT_ERROR)
       return ctx.app.emit('error', err, ctx)
     }
+    const { role } = ctx.request.body
+    if (!role) return
     try {
       const result = await search(role, pagenum, pagesize)
-      ctx.body = successBody(result)
+      const total = await searchRoleTotal(role)
+      ctx.body = successBody({
+        roles: result,
+        total,
+      })
     } catch (e) {
       console.log(e)
     }
@@ -79,23 +96,24 @@ class Roles {
     const { roleId } = ctx.params
     if (isNaN(roleId)) return
     try {
-      const result = await getRightsByRole(roleId)
-      const res = []
-      const map = result.reduce((pre, item) => {
-        pre[item.id] = item
-        return pre
-      }, {})
-      for (const item of result) {
-        if (item.pid === null) {
-          res.push(item)
-        }
-        if (item.pid in map) {
-          const parent = map[item.pid]
-          parent.children = parent.children || []
-          parent.children.push(item)
-        }
-      }
-      ctx.body = successBody(res)
+      let result = await getRightsByRole(roleId)
+      // const res = []
+      // const map = result.reduce((pre, item) => {
+      //   pre[item.id] = item
+      //   return pre
+      // }, {})
+      // for (const item of result) {
+      //   if (item.pid === null) {
+      //     res.push(item)
+      //   }
+      //   if (item.pid in map) {
+      //     const parent = map[item.pid]
+      //     parent.children = parent.children || []
+      //     parent.children.push(item)
+      //   }
+      // }
+      // ctx.body = successBody(res)
+      ctx.body = successBody(result ? result.split(',').map((i) => parseInt(i)) : [])
     } catch (e) {
       console.log(e)
     }
@@ -105,7 +123,7 @@ class Roles {
     const { roleId } = ctx.params
     const { rightsList } = ctx.request.body
     try {
-      const result = await setRights(roleId, rightsList)
+      const result = await setRights(roleId, rightsList.join(','))
       ctx.body = successBody(result, '分配权限成功')
     } catch (e) {
       console.log(e)

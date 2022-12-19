@@ -7,7 +7,7 @@ class rights {
     const result = ctx.result
     ctx.body = successBody({
       total: result.length,
-      rightsList: result,
+      rights: result,
     })
   }
 }

@@ -1,7 +1,6 @@
-const fs = require('fs')
 const { getUserInfo } = require('../service/user.service')
 const { FORMAT_ERROR } = require('../constants/error-types')
-const { list, detail, search } = require('../service/moment.service')
+const { list, search } = require('../service/moment.service')
 const { isMyNaN } = require('../utils/common')
 
 const getMultiMoment = async (ctx, next) => {
@@ -19,7 +18,6 @@ const getMultiMoment = async (ctx, next) => {
     } else {
       const promissArr = result.map(async (item) => {
         item.author = await getUserInfo(item.author)
-        console.log(item.author)
         return item
       })
       ctx.result = await Promise.all(promissArr)
