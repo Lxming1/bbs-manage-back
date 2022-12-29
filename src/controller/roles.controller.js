@@ -97,22 +97,6 @@ class Roles {
     if (isNaN(roleId)) return
     try {
       let result = await getRightsByRole(roleId)
-      // const res = []
-      // const map = result.reduce((pre, item) => {
-      //   pre[item.id] = item
-      //   return pre
-      // }, {})
-      // for (const item of result) {
-      //   if (item.pid === null) {
-      //     res.push(item)
-      //   }
-      //   if (item.pid in map) {
-      //     const parent = map[item.pid]
-      //     parent.children = parent.children || []
-      //     parent.children.push(item)
-      //   }
-      // }
-      // ctx.body = successBody(res)
       ctx.body = successBody(result ? result.split(',').map((i) => parseInt(i)) : [])
     } catch (e) {
       console.log(e)
@@ -120,11 +104,14 @@ class Roles {
   }
 
   async setRights(ctx) {
-    const { roleId } = ctx.params
+    let { roleId } = ctx.params
+    const { role_id } = ctx.user
     const { rightsList } = ctx.request.body
+    roleId = parseInt(roleId)
+    if ([1, 2, 3].includes(roleId) && role_id !== 1) return
     try {
-      const result = await setRights(roleId, rightsList.join(','))
-      ctx.body = successBody(result, '分配权限成功')
+      await setRights(roleId, rightsList.join(','))
+      ctx.body = successBody(rightsList, '分配权限成功')
     } catch (e) {
       console.log(e)
     }

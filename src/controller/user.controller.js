@@ -7,6 +7,7 @@ const {
   role,
   searchUserTotal,
   changeStatue,
+  getUserInfo,
 } = require('../service/user.service')
 const { successBody, isMyNaN } = require('../utils/common')
 
@@ -73,6 +74,8 @@ class User {
     const { id } = ctx.user
     const { name, status } = ctx.request.body
     if (status !== undefined) {
+      const { userId } = ctx.params
+      if (parseInt(userId) === 1) return
       const result = await changeStatue(userId, status)
       ctx.body = successBody(result, '修改状态成功')
     }
@@ -101,6 +104,17 @@ class User {
     const { userId } = ctx.params
     const result = await role(userId)
     ctx.body = successBody(result[0])
+  }
+
+  async getUser(ctx) {
+    const { userId } = ctx.params
+    if (!userId) return
+    try {
+      const result = await getUserInfo(userId)
+      ctx.body = successBody(result)
+    } catch (e) {
+      console.log(e)
+    }
   }
 }
 

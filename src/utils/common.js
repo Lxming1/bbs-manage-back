@@ -40,6 +40,25 @@ const getOffset = (pagenum, pagesize) => String((pagenum - 1) * pagesize)
 
 const isMyNaN = (...num) => num.some((item) => isNaN(item))
 
+const listTransTree = (result, pidName, idName = 'id') => {
+  const res = []
+  const map = result.reduce((pre, item) => {
+    pre[item[idName]] = item
+    return pre
+  }, {})
+  for (const item of result) {
+    if (item[pidName] === null) {
+      res.push(item)
+    }
+    if (item[pidName] in map) {
+      const parent = map[item[pidName]]
+      parent.children = parent.children || []
+      parent.children.push(item)
+    }
+  }
+  return res
+}
+
 module.exports = {
   md5handle,
   successBody,
@@ -48,4 +67,5 @@ module.exports = {
   verifyEmail,
   getOffset,
   isMyNaN,
+  listTransTree,
 }

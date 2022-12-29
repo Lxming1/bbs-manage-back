@@ -1,19 +1,18 @@
-const { create, reply, del, praise, cancelPraise } = require('../service/comment.service')
-const { successBody, isMyNaN } = require('../utils/common')
+const { changeStatus } = require('../service/comment.service')
+const { successBody } = require('../utils/common')
 
 class Comment {
-  async del(ctx) {
+  async status(ctx) {
     const { commentId } = ctx.params
-    const result = await del(commentId)
-    ctx.body = successBody(result, '删除成功')
+    const { status } = ctx.request.body
+    if (status === undefined) return
+    await changeStatus(commentId, status)
+    ctx.body = successBody(true)
   }
 
   async list(ctx) {
     const result = ctx.result
-    ctx.body = successBody({
-      total: result.length,
-      comments: result,
-    })
+    ctx.body = successBody(result)
   }
 }
 

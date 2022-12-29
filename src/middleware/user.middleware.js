@@ -1,11 +1,5 @@
-const nodemailer = require('nodemailer')
-
-const errorTypes = require('../constants/error-types')
-const redis = require('../utils/redis')
-const { getUserByEmail, getCareFansList, userList, userTotal } = require('../service/user.service')
-const { md5handle, verifyEmail, randomFns, isMyNaN } = require('../utils/common')
-const { MY_EMAIL, MY_EMAIL_PASS } = require('../app/config.js')
-const { getUserInfo } = require('../service/user.service')
+const { userList, userTotal } = require('../service/user.service')
+const { md5handle, isMyNaN } = require('../utils/common')
 
 // 验证邮箱密码
 const verifyPass = async (ctx, next) => {
@@ -20,99 +14,6 @@ const verifyPass = async (ctx, next) => {
 const handlePassword = async (ctx, next) => {
   const { password } = ctx.request.body
   ctx.request.body.password = md5handle(password)
-  await next()
-}
-
-const verifyUEmail = async (ctx, next) => {
-  const { email } = ctx.request.body
-
-  if (!email) return
-  // 验证邮箱有效性
-  if (!verifyEmail(email)) {
-    const err = new Error(errorTypes.FORMAT_ERROR)
-    return ctx.app.emit('error', err, ctx)
-  }
-
-  // 判断邮箱是否已存在
-  const result = await getUserByEmail(email)
-  if (result.length !== 0) {
-    const err = new Error(errorTypes.EMAIL_ALREADY_EXIST)
-    return ctx.app.emit('error', err, ctx)
-  }
-
-  await next()
-}
-
-const sendEmail = async (ctx, next) => {
-  const { email } = ctx.request.body
-  const result = await redis.get(email)
-
-  if (result) {
-    const err = new Error(errorTypes.EXIST_CODE)
-    return ctx.app.emit('error', err, ctx)
-  }
-  const code = randomFns()
-
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.163.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: MY_EMAIL,
-      pass: MY_EMAIL_PASS,
-    },
-  })
-
-  await redis.set(email, code, 'EX', 60)
-
-  const receiver = {
-    from: MY_EMAIL,
-    to: email,
-    subject: '验证你的电子邮件',
-    html: `
-      <p>你好！</p>
-      <p>您正在注册BBS账号</p>
-      <p>你的验证码是：<strong style="color: #ff4e2a;">${code}</strong></p>
-      <p>***该验证码1分钟内有效***</p>
-    `,
-  }
-
-  await transporter.sendMail(receiver, (err, info) => {
-    if (err) {
-      const err = new Error(errorTypes.EMAIL_ERROR)
-      return ctx.app.emit('error', err, ctx)
-    }
-    transporter.close()
-    console.log('发送成功:', info.response)
-  })
-  await next()
-}
-
-const verifyCode = async (ctx, next) => {
-  const { email, code } = ctx.request.body
-  const rightCode = await redis.get(email)
-
-  if (rightCode !== code) {
-    const err = new Error(errorTypes.CODE_IS_INCORRECT)
-    return ctx.app.emit('error', err, ctx)
-  }
-
-  await next()
-}
-
-const setCareFansList = async (ctx, next) => {
-  const { url } = ctx.request
-  const isFans = url.indexOf('fans') !== -1 && url.indexOf('care') === -1
-  const { pagenum, pagesize } = ctx.query
-  if (isMyNaN(pagenum, pagesize)) return
-  if (parseInt(pagenum) < 0 || parseInt(pagesize) < 0) {
-    const err = new Error(FORMAT_ERROR)
-    return ctx.app.emit('error', err, ctx)
-  }
-  const { userId } = ctx.params
-  const fansIdList = await getCareFansList(userId, pagenum, pagesize, isFans)
-  const promiseArr = fansIdList.map(async (item) => await getUserInfo(item.id))
-  ctx.result = await Promise.all(promiseArr)
   await next()
 }
 
@@ -136,10 +37,6 @@ const getInfo = async (ctx, next) => {
 
 module.exports = {
   verifyPass,
-  verifyUEmail,
   handlePassword,
-  sendEmail,
-  verifyCode,
-  setCareFansList,
   getInfo,
 }

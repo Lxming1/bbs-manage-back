@@ -45,12 +45,32 @@ const sqlFragment = `
     r.id = u.role_id
 `
 
+const userListSql = `
+  select 
+    u.id, u.email, ud.name,u.status,
+    JSON_OBJECT(
+      'id', r.id,
+      'name', r.name
+    ) role,
+    u.create_at createTime
+  from 
+    users u
+  join 
+    user_detail ud 
+  on 
+    ud.user_id = u.id
+  join
+    roles r
+  on
+    r.id = u.role_id
+`
+
 class User {
   async getUserByEmail(email) {
     const statement = `
-      select id, email, password, status
-      from users 
-      where email = ? and role_id != '2'
+      select u.id, u.email, u.password, u.role_id
+      from users u join role_rights rr on rr.role_id = u.role_id 
+      where email = ? and rr.rights_list is not null
     `
     const result = await connection.execute(statement, [email])
     return result[0]
@@ -130,7 +150,7 @@ class User {
   }
 
   async userList(pagenum, pagesize) {
-    const statement = `${sqlFragment} order by u.id limit ?, ?`
+    const statement = `${userListSql} order by u.id limit ?, ?`
     const [result] = await connection.execute(statement, [getOffset(pagenum, pagesize), pagesize])
     result.filter((item) => item.adress !== null)
     return result
@@ -144,7 +164,7 @@ class User {
 
   async searchUser(user, pagenum, pagesize) {
     let statement = `
-      ${sqlFragment} where ud.name like ? or u.email like ? limit ?, ?
+      ${userListSql} where ud.name like ? or u.email like ? limit ?, ?
     `
     let [result] = await connection.execute(statement, [
       `%${user}%`,
@@ -209,7 +229,6 @@ class User {
   }
 
   async changeStatue(userId, status) {
-    console.log(status, userId)
     const statement = `update users set status = ? where id = ?`
     const [result] = await connection.execute(statement, [status, userId])
     return result

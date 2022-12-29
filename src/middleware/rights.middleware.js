@@ -1,4 +1,5 @@
 const { list } = require('../service/rights.service')
+const { listTransTree } = require('../utils/common')
 
 const handleRights = async (ctx, next) => {
   try {
@@ -12,24 +13,9 @@ const handleRights = async (ctx, next) => {
         key: item.id,
         title: item.name,
         pid: item.pid,
+        level: item.level,
       }))
-      const res = []
-      const map = result.reduce((pre, item) => {
-        pre[item.key] = item
-        return pre
-      }, {})
-
-      for (const item of result) {
-        if (item.pid === null) {
-          res.push(item)
-        }
-        if (item.pid in map) {
-          const parent = map[item.pid]
-          parent.children = parent.children || []
-          parent.children.push(item)
-        }
-      }
-      ctx.result = res
+      ctx.result = listTransTree(result, 'pid', 'key')
     }
     await next()
   } catch (e) {

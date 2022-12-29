@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const { PUBLIC_KEY } = require('../app/config')
 const errorTypes = require('../constants/error-types')
+const { getRightsByRole } = require('../service/rights.service')
 const { getUserByEmail } = require('../service/user.service')
 const { md5handle } = require('../utils/common')
 
@@ -45,7 +46,28 @@ const verifyAuth = async (ctx, next) => {
   }
 }
 
+const verifyRights = (...rightsId) => {
+  return async (ctx, next) => {
+    const { role_id } = ctx.user
+    try {
+      const result = await getRightsByRole(role_id)
+      const hasRights = result
+        .split(',')
+        .map((item) => parseInt(item))
+        .some((item) => rightsId.includes(item))
+      if (!hasRights) {
+        const err = new Error(errorTypes.UNPERMISSION)
+        return ctx.app.emit('error', err, ctx)
+      }
+      await next()
+    } catch (e) {
+      console.log(e)
+    }
+  }
+}
+
 module.exports = {
   verifyLogin,
   verifyAuth,
+  verifyRights,
 }

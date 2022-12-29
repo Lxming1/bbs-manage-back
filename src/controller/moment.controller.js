@@ -4,20 +4,19 @@ const { PICTURE_PATH } = require('../constants/file-types')
 const fs = require('fs')
 
 class Moment {
-  async search(ctx) {
-    const result = ctx.result
-    ctx.body = successBody({
-      total: result.length,
-      momentList: result,
-    })
-  }
   // 查询多条动态
   async list(ctx, next) {
     const result = ctx.result
+    const total = ctx.total
     ctx.body = successBody({
-      total: result?.length ?? 0,
+      total,
       moments: result,
     })
+  }
+
+  async detail(ctx, next) {
+    const result = ctx.result
+    ctx.body = successBody(result)
   }
 
   // 修改动态

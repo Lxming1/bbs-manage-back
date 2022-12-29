@@ -17,6 +17,7 @@ module.exports = {
   REDIS_HOST,
   MY_EMAIL,
   MY_EMAIL_PASS,
+  IMG_PORT,
 } = process.env
 
 module.exports.PRIVATE_KEY = PRIVATE_KEY
