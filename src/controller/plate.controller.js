@@ -34,7 +34,11 @@ class Plate {
       const result = await delPlateById(plateId)
       ctx.body = successBody(result, '删除成功')
     } catch (e) {
-      console.log(e)
+      ctx.status = 401
+      ctx.body = {
+        code: 1,
+        message: '该板块包含动态，删除失败',
+      }
     }
   }
 
@@ -52,7 +56,7 @@ class Plate {
 
   async add(ctx) {
     const { description, name } = ctx.request.body
-    if (!description || !name) return
+    if (!name) return
     try {
       const result = await addPlate(name, description)
       ctx.body = successBody(result, '添加成功')
