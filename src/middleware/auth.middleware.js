@@ -12,7 +12,7 @@ const verifyLogin = async (ctx, next) => {
   if (!user.email || !user.password) return
   // 判断用户是否存在
   let result = (await getUserByEmail(user.email))[0]
-  //判断密码是否正确
+  // 判断密码是否正确
   if (!result || result.password !== md5handle(user.password)) {
     const err = new Error(errorTypes.EMAIL_PASSWORD_ERROR)
     return ctx.app.emit('error', err, ctx)

@@ -70,7 +70,7 @@ class User {
     const statement = `
       select u.id, u.email, u.password, u.role_id
       from users u join role_rights rr on rr.role_id = u.role_id 
-      where email = ? and rr.rights_list is not null
+      where email = ? and rr.rights_list is not null and rr.rights_list != ''
     `
     const result = await connection.execute(statement, [email])
     return result[0]
